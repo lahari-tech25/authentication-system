@@ -23,7 +23,12 @@ app.post('/users/register',async (req,res)=>{
         const user = await User.create(req.body);
         res.status(201).json({
             message:"User created successfully",
-            user:user
+            user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+       }
         });
     }catch(error){
         res.status(500).json({
