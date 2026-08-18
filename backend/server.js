@@ -2,16 +2,25 @@ require('dotenv').config();
 
 const express = require('express');
 const connectDB = require('./db');
+const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const User = require('./models/User');
+const authenticate = require('./middleware/authMiddleware');
 
 const app = express();
 const port = 8080;
 
 //json  parser middleware 
 app.use(express.json());
+
 //connect the database
 connectDB();
+
+//cookie parser
+app.use(express.json());
+app.use(cookieParser());
+
 
 app.get('/',(req,res)=>{
     res.send('Hello World from Auth system hey this is me  ');
@@ -63,6 +72,26 @@ app.post('/users/login', async (req, res) => {
             });
         }
 
+        //token generation
+
+        const token = jwt.sign(
+    {
+        userId: user._id,
+        role: user.role
+    },
+    process.env.JWT_SECRET_KEY,
+    {
+        expiresIn: '1h'
+    }
+);
+       //cookie response
+       res.cookie('accessToken', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 60 * 60 * 1000
+});
+
         res.status(200).json({
             message: "Login successful",
             user: {
@@ -79,6 +108,14 @@ app.post('/users/login', async (req, res) => {
             error: error.message
         });
     }
+});
+
+//get users
+app.get('/users/profile', authenticate, (req, res) => {
+    res.json({
+        message: "You accessed a protected route",
+        user: req.user
+    });
 });
 
 app.listen(port,()=>{
