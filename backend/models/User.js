@@ -15,7 +15,8 @@ const userSchema = new mongoose.Schema({
 
     password: {
         type: String,
-        required: true
+        required: true,
+        select:false,
     },
 
     role: {
@@ -33,4 +34,6 @@ userSchema.pre('save', async function() {
 
 const User = mongoose.model('User', userSchema);
 
-module.exports = User;
+module.exports =
+    mongoose.models.User ||
+    mongoose.model('User', userSchema);
